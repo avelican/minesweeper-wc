@@ -10,5 +10,6 @@ x   mine-sweeper custom element
 x   mine-sweeper takes rows/cols custom attributes
 
   Phase III: Enhancements
+    Click to Restart message
     High score
 x    Keyboard navigation

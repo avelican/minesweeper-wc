@@ -7,9 +7,40 @@ function str(n: int) {
 
 ///
 
+
+class MsgBus {
+  handlers: Record<string, Function[]> = {}; // map of array
+
+  subscribe(event: string, callback: Function) {
+    if (!this.handlers[event]) {
+        this.handlers[event] = [];
+    }
+    this.handlers[event]!.push(callback);
+    return () => this.unsubscribe(event, callback);
+  }
+
+  unsubscribe(event: string, callback: Function) {
+    if (!this.handlers[event]) return;
+    this.handlers[event] = this.handlers[event]!.filter( cb => cb !== callback);
+  }
+
+  publish(event: string, data: any) {
+    if(this.handlers[event]) {
+      for(let callback of this.handlers[event]!) {
+        callback(data);
+      }
+    }
+  }
+}
+
+let msgBus = new MsgBus();
+
+///
+
 class MineSweeper extends HTMLElement {
-
-
+	startTime = -1;
+	endTime = -1;
+	score: int = 0;
 
 	ROWS: int = 9;
 	COLS: int = 9;
@@ -35,7 +66,9 @@ class MineSweeper extends HTMLElement {
 		for(let x = 0; x < this.COLS; x++) {
 			this.mines.push([]);
 			for(let y = 0; y < this.ROWS; y++) {
-				const isMine = Math.random() < 0.10; // on avg, 10% of board filled with mines 
+				// const isMine = Math.random() < 0.10; // on avg, 10% of board filled with mines 
+				const isMine = Math.random() < 0.02; // TMP TODO FIXME
+
 				this.mines[x]!.push(isMine);
 			}
 		}
@@ -138,9 +171,13 @@ class MineSweeper extends HTMLElement {
 		// visible[x][y] = true;
 		let isMine = this.mines[x]![y];
 
-		if(this.firstClick && isMine) {
-			this.move_mine(x,y);
-			isMine = false;
+		if (this.firstClick){
+			this.startTime = Number(new Date());
+		
+			if(isMine) {
+				this.move_mine(x,y);
+				isMine = false;
+			}
 		}
 
 		this.firstClick = false;
@@ -148,13 +185,13 @@ class MineSweeper extends HTMLElement {
 		if (isMine) {
 			// cells[x][y].style.backgroundColor = "red";
 			// alert('dead');
-			this.game_over();
+			this.game_over(false);
 		} else {
 			// cells[x][y].style.backgroundColor = "#ddd";
 			this.flood_fill(x,y);
 			if(this.check_win()) {
 				alert('you win')
-				this.game_over();
+				this.game_over(true);
 			}
 		}
 		this.render();
@@ -355,8 +392,21 @@ class MineSweeper extends HTMLElement {
 
 	///
 
-	game_over() {
+	game_over(win: bool) {
+		this.endTime = Number(new Date());
+		if(win){
+			const time = this.endTime - this.startTime;
+			this.score = Math.floor( ( 1/time ) * 1000000);
+		} else {
+			this.score = 0;
+		}
 		this.show_all();
+
+		// notify high score component
+		const payload : GameOverEvent = { score: this.score, highScoreCallback: () => { this._highlight(); }}; 
+		// TODO: but what about unhighlighting when other button wins?
+		// Maybe HighScore should broadcast a highscore message containing the ID of the winning button
+		msgBus.publish("gameover", payload);
 	}
 
 	///
@@ -475,8 +525,45 @@ class MineSweeper extends HTMLElement {
 	// 	}
 	// })
 
+
+	_highlight() {
+		this.classList.add('highlight');
+		setTimeout(() => {this.classList.remove('highlight');}, 1000);
+	}
+
+	
 }
 
 customElements.define('mine-sweeper', MineSweeper);
 
+// NOTE: this is unrelated to the browser's event system
+// TODO: so perhaps the name is confusing?
+interface GameOverEvent {
+	score: number;
+	highScoreCallback: () => void;
+}
 
+class HighScore extends HTMLElement {
+	score = 0;
+	connectedCallback() {
+		this.render();
+		msgBus.subscribe(
+			'gameover', 
+			(gameOverEvent: GameOverEvent) => this.handleGameOver(gameOverEvent)
+		);
+	}
+	render(){
+		this.innerHTML = `<div class="highscore">High Score: ${this.score}</div>`;
+	}
+	handleGameOver(gameOverEvent: GameOverEvent) {
+		console.log('HighScore.handleGameOver()')
+		console.log(gameOverEvent);
+		if(gameOverEvent.score > this.score) {
+			this.score = gameOverEvent.score;
+			this.render();
+			gameOverEvent.highScoreCallback(); // tell the game that it won
+		}
+	}
+}
+
+customElements.define('high-score', HighScore);

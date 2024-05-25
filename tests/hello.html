@@ -4,11 +4,16 @@
     <meta charset="utf-8">
     <title>webpack test</title>
     <style>
+high-score{
+  background-color:#fff8;
+  padding:1em;
+}
 .board{
 	background-color: #aaa;
 
 	text-align: center;
 	padding: 2em;
+  margin:1em;
 }
 body{
 	font-family: sans-serif;
@@ -46,6 +51,9 @@ td{
 .flag {
   background-color: magenta !important;
 }
+.highlight {
+  outline:1em solid green;
+}
     </style>
   </head>
 <body>
@@ -57,6 +65,7 @@ td{
   </div>
 </template>
 
+<high-score></high-score>
 <mine-sweeper></mine-sweeper>
 <mine-sweeper rows="7" cols="7"></mine-sweeper>
 

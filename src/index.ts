@@ -373,6 +373,19 @@ class MineSweeper extends HTMLElement {
 
 	///
 
+
+
+	static observedAttributes = ['rows', 'cols'];
+
+  attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    if (name === 'rows') {
+      this.ROWS = Number(newValue);
+    } else if (name === 'cols') {
+      this.COLS = Number(newValue);
+    }
+		
+  }
+
 	connectedCallback() {
 		const template = document.querySelector('#minesweeper-template')!
 		this.innerHTML = template.innerHTML;

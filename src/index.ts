@@ -59,13 +59,14 @@ function init_table() {
 			// td.addEventListener("mousedown", (e) => {
 			// 	e.target.style.backgroundColor = "red";
 			// })
-			td.addEventListener("mousedown", click_cell)
+			// td.addEventListener("mousedown", click_cell) // NOTE: moved to table
 
 			cells[x]![y] = td;
 			tr.append(td);
 		}
 		table.append(tr);
 	}
+	table.addEventListener("mousedown", click_table);
 }
 
 function init_board() {
@@ -79,9 +80,17 @@ function init_board() {
 
 ///
 
-function click_cell(event: MouseEvent) {
+function click_table(event: MouseEvent) {
 
-  const cell : HTMLTableElement = event.target as HTMLTableElement; // NOTE: click_cell() handler is only attached to TD elements 
+	// NOTE: currently we only handle the case where a cell was clicked
+	const target = event.target as HTMLElement;
+	
+	if (target.tagName != 'TD')  return;
+
+	// TODO use .cell divs instead
+	// if (target.className != 'cell') return;
+
+  const cell : HTMLTableElement = target as HTMLTableElement; // NOTE: click_cell() handler is only attached to TD elements 
 	const [x,y] = id_to_coords(cell.id);
 	console.log('click',x,y)
 

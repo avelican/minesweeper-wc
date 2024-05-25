@@ -1,0 +1,12 @@
+  Phase I: straight port
+x   Setup Webpack and TS
+x    Port vanilla js minesweeper over
+x    Fix infinite TS warnings
+
+  Phase II: Refactor
+    mine-sweeper custom element
+    mine-sweeper takes rows/cols custom attributes
+
+  Phase III: Enhancements
+    High score
+    Keyboard navigation

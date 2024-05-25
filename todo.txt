@@ -1,12 +1,12 @@
-  Phase I: straight port
+x Phase I: straight port
 x   Setup Webpack and TS
 x    Port vanilla js minesweeper over
 x    Fix infinite TS warnings
 
-  Phase II: Refactor
-    instead of using TD, use a DIV inside the TD. This will be replaced with a custom element later.
-    instead of adding a click handler on each cell, just put one on the table (event delegation).
-    mine-sweeper custom element
+x Phase II: Refactor
+x   instead of using TD, use a DIV inside the TD. This will be replaced with a custom element later.
+x   instead of adding a click handler on each cell, just put one on the table (event delegation).
+x    mine-sweeper custom element
     mine-sweeper takes rows/cols custom attributes
 
   Phase III: Enhancements

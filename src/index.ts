@@ -21,7 +21,7 @@ let counts: int[][] = [] ;  // 2D grid, int (well, 'number' in JS...)
 let flags: bool[][] = [] ;  // 2D grid, bool
 
 
-let cells: HTMLTableCellElement[][] = [];  // 2D grid, references to <td> (game board cells)
+let cells: HTMLDivElement[][] = [];  // 2D grid, references to <td> (game board cells)
 
 let firstClick = true;
 let wasReset = false;
@@ -55,13 +55,17 @@ function init_table() {
 		const tr = document.createElement("tr");
 		for(let y = 0; y < ROWS; y++) {
 			const td = document.createElement("td");
-			td.id = `${x}_${y}`;
-			// td.addEventListener("mousedown", (e) => {
-			// 	e.target.style.backgroundColor = "red";
-			// })
-			// td.addEventListener("mousedown", click_cell) // NOTE: moved to table
+			// td.id = `${x}_${y}`;
+			
+			const cell = document.createElement("div");
+			cell.className = 'cell';
+			cell.id = `${x}_${y}`;
+			// TODO replace cell with custom element
+			
+			// NOTE: click events now handled on table (event delegation)
 
-			cells[x]![y] = td;
+			cells[x]![y] = cell;
+			td.append(cell);
 			tr.append(td);
 		}
 		table.append(tr);
@@ -85,12 +89,12 @@ function click_table(event: MouseEvent) {
 	// NOTE: currently we only handle the case where a cell was clicked
 	const target = event.target as HTMLElement;
 	
-	if (target.tagName != 'TD')  return;
+	if (target.tagName != 'DIV')  return;
 
 	// TODO use .cell divs instead
 	// if (target.className != 'cell') return;
 
-  const cell : HTMLTableElement = target as HTMLTableElement; // NOTE: click_cell() handler is only attached to TD elements 
+  const cell = target as HTMLDivElement; // NOTE: click_cell() handler is only attached to TD elements 
 	const [x,y] = id_to_coords(cell.id);
 	console.log('click',x,y)
 
@@ -159,6 +163,8 @@ function move_mine(x: int, y: int) {
 function id_to_coords(id: string) : [int, int] {
   // TODO: after refactor does it make sense to use IDs here at all?
   // I think we removed them in another version
+	// EDIT: In React version we use an `index` prop on <Cell>, 
+	// and pass `index` to the click handler. (index is from the 1D version)
   // @ts-ignore 
 	return id.split('_').map(x => Number(x));
 }

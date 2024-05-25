@@ -58,10 +58,16 @@ class MineSweeper extends HTMLElement {
 		// const table = document.querySelector('table') as HTMLTableElement;
 		const table = this.querySelector('table') as HTMLTableElement;
 		
-		for(let x = 0; x < this.COLS; x++) {
+		for(let y = 0; y < this.ROWS; y++) {
+			this.cells.push([]);
+		}
+
+		// for(let x = 0; x < this.COLS; x++) {
+		for(let y = 0; y < this.ROWS; y++) {
 			this.cells.push([]);
 			const tr = document.createElement("tr");
-			for(let y = 0; y < this.ROWS; y++) {
+			// for(let y = 0; y < this.ROWS; y++) {
+				for(let x = 0; x < this.COLS; x++) {
 				const td = document.createElement("td");
 				// td.id = `${x}_${y}`;
 				
@@ -70,6 +76,7 @@ class MineSweeper extends HTMLElement {
 				// cell.id = `${x}_${y}`;
 				cell.dataset['x'] = str(x);
 				cell.dataset['y'] = str(y);
+				cell.setAttribute('tabindex', '0'); // enable keyboard navigation
 
 				// TODO replace cell with custom element
 				
@@ -115,16 +122,18 @@ class MineSweeper extends HTMLElement {
 		console.log('click',x,y)
 
 		if(event.button == 0) {
-			this.left_click_cell(x,y);
+			this.open_cell(x,y);
 		}
 		if(event.button == 2) {
-			this.right_click_cell(x,y);
+			this.flag_cell(x,y);
 			// event.preventDefault(); // prevent right click menu
 			// return false; // prevent right click menu
 		}
 	}
 
-	left_click_cell(x: int, y: int) {
+
+
+	open_cell(x: int, y: int) {
 
 		// visible[x][y] = true;
 		let isMine = this.mines[x]![y];
@@ -151,7 +160,7 @@ class MineSweeper extends HTMLElement {
 		this.render();
 	}
 
-	right_click_cell(x: int, y: int) {
+	flag_cell(x: int, y: int) {
 		console.log('right_click_cell', x, y)
 		console.log(this.flags[x]![y])
 		// if(visible[x][y]) return;
@@ -392,10 +401,62 @@ class MineSweeper extends HTMLElement {
 		// NOTE: could also use cloneNode(true); Not sure if it matters
 
 		this.init();
+
+		// disable context menu on game board
 		this.addEventListener('contextmenu', function(e){
 			e.preventDefault();
 			return false;
 		})
+
+		// keyboard navigation
+		// TODO: TS dislikes this. Is there a better way?
+		// @ts-ignore 
+		if (typeof window.minesweeper_kbd_handled === 'undefined') {
+			// @ts-ignore
+			window.minesweeper_kbd_handled = true;
+			
+			document.addEventListener('keydown', (event) => {
+				console.log(event.target);
+				console.log(event.code)
+				const target = event.target as HTMLElement;
+				if (!target.className.includes('cell')) {
+					console.log(target);
+					return;
+				}
+				const cell = event.target as HTMLDivElement;
+				const x = Number(cell.dataset['x']);
+				const y = Number(cell.dataset['y']);		
+
+				if (event.code == 'Space') {
+
+					this.open_cell(x,y);
+					return;
+				}
+
+				if (event.code == 'KeyF') {
+					this.flag_cell(x,y);
+					return;
+				}
+
+				// movement
+				let dx = 0;
+				let dy = 0;
+				switch(event.code) {
+					case "ArrowUp":    dy = -1; break;
+					case "ArrowDown":  dy =  1; break;
+					case "ArrowLeft":  dx = -1; break;
+					case "ArrowRight": dx =  1; break;
+				}
+				// let targetCell = findCell(x+dx, y+dy);
+				let targetCell = this.cells[x+dx]![y+dy];
+				
+				if(targetCell) {
+					targetCell.focus();
+				}
+			})
+		}
+
+
 	}
 
 	// this.init();
@@ -417,3 +478,5 @@ class MineSweeper extends HTMLElement {
 }
 
 customElements.define('mine-sweeper', MineSweeper);
+
+

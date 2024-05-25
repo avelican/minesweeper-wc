@@ -6,9 +6,9 @@ x    Fix infinite TS warnings
 x Phase II: Refactor
 x   instead of using TD, use a DIV inside the TD. This will be replaced with a custom element later.
 x   instead of adding a click handler on each cell, just put one on the table (event delegation).
-x    mine-sweeper custom element
-    mine-sweeper takes rows/cols custom attributes
+x   mine-sweeper custom element
+x   mine-sweeper takes rows/cols custom attributes
 
   Phase III: Enhancements
     High score
-    Keyboard navigation
+x    Keyboard navigation

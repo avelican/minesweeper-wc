@@ -11,7 +11,7 @@ function str(n: int) {
 class MsgBus {
   handlers: Record<string, Function[]> = {}; // map of array
 
-  subscribe(event: string, callback: Function) {
+  subscribe(event: string, callback: Function): () => void {
     if (!this.handlers[event]) {
         this.handlers[event] = [];
     }
@@ -38,6 +38,11 @@ let msgBus = new MsgBus();
 ///
 
 class MineSweeper extends HTMLElement {
+	gameOver = false;
+	wonGame = false;
+	firstClick = true;
+	wasReset = false;
+
 	startTime = -1;
 	endTime = -1;
 	score: int = 0;
@@ -58,16 +63,31 @@ class MineSweeper extends HTMLElement {
 
 	cells: HTMLDivElement[][] = [];  // 2D grid, references to <td> (game board cells)
 
-	firstClick = true;
-	wasReset = false;
+	clock_interval: number | null = null;
+	clock_start_time: Date | null = null;
+	clock_stop_time: Date | null = null; // technically unused, but for completeness
+	
 
-	init_mines() {
+	clock_start() : void {
+		this.clock_start_time = new Date();
+		this.clock_interval = window.setInterval(()=>{ this.update_clock(); }, 100);
+	}
+
+	clock_stop(): void {
+		if (this.clock_interval){
+			window.clearInterval(this.clock_interval);
+			this.clock_interval = null;
+			this.clock_stop_time = new Date();
+		}
+	}
+
+	init_mines() : void {
 		this.mines = [];
 		for(let x = 0; x < this.COLS; x++) {
 			this.mines.push([]);
 			for(let y = 0; y < this.ROWS; y++) {
-				// const isMine = Math.random() < 0.10; // on avg, 10% of board filled with mines 
-				const isMine = Math.random() < 0.02; // TMP TODO FIXME
+				const isMine = Math.random() < 0.10; // on avg, 10% of board filled with mines 
+				// const isMine = Math.random() < 0.02; // TMP TODO FIXME
 
 				this.mines[x]!.push(isMine);
 			}
@@ -137,7 +157,7 @@ class MineSweeper extends HTMLElement {
 
 	click_table(event: MouseEvent) {
 
-		// TODO move this into Cell 
+		// TODO move this into a Cell component ?
 
 		// NOTE: currently we only handle the case where a cell was clicked
 		const target = event.target as HTMLElement;
@@ -168,6 +188,10 @@ class MineSweeper extends HTMLElement {
 
 	open_cell(x: int, y: int) {
 
+		if (this.clock_interval == null) {
+			this.clock_start();
+		}
+
 		// visible[x][y] = true;
 		let isMine = this.mines[x]![y];
 
@@ -190,7 +214,7 @@ class MineSweeper extends HTMLElement {
 			// cells[x][y].style.backgroundColor = "#ddd";
 			this.flood_fill(x,y);
 			if(this.check_win()) {
-				alert('you win')
+				// alert('you win')
 				this.game_over(true);
 			}
 		}
@@ -198,6 +222,10 @@ class MineSweeper extends HTMLElement {
 	}
 
 	flag_cell(x: int, y: int) {
+		if (this.clock_interval == null) {
+			this.clock_start();
+		}
+		
 		console.log('right_click_cell', x, y)
 		console.log(this.flags[x]![y])
 		// if(visible[x][y]) return;
@@ -329,6 +357,10 @@ class MineSweeper extends HTMLElement {
 	///
 
 	render() {
+		// status messages 
+		this.update_text_content();
+
+		// board
 		for(let x = 0; x < this.COLS; x++) {
 			for(let y = 0; y < this.ROWS; y++) {
 				const cell = this.cells[x]![y]!;
@@ -392,27 +424,138 @@ class MineSweeper extends HTMLElement {
 
 	///
 
+  count_mines() : int {
+		let count = 0;
+		for(let x = 0; x < this.COLS; x++) {
+			for(let y = 0; y < this.ROWS; y++) {
+				if(this.mines[x]![y]!) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	count_flags() : int {
+		let count = 0;
+		for(let x = 0; x < this.COLS; x++) {
+			for(let y = 0; y < this.ROWS; y++) {
+				if(this.flags[x]![y]!) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	count_unflagged_mines() : int {
+		return this.count_mines() - this.count_flags();
+	}
+
+	///
+
+	update_text_content() : void {
+		this.update_status_text();
+		// this.update_time(); // NOTE: time updates itself
+		this.update_score(); // NOTE: Score only displays at end of game
+		this.update_restart_msg(); // NOTE: Restart message only displays at end of game 
+
+	}
+
+	update_clock() : void {
+		const time_msg = this.querySelector('#time-msg') as HTMLHeadingElement;
+		const elapsed = Number(new Date()) - Number(this.clock_start_time);
+		const total_seconds = Math.floor(elapsed / 1000);
+		const display_seconds = total_seconds % 60;
+		const total_minutes = Math.floor(total_seconds / 60);
+		// time_msg.textContent = str(total_seconds); // classic
+		const s = (display_seconds<10) ? `0${display_seconds}` : str(display_seconds);
+		const m = (total_minutes<10) ? `0${total_minutes}` : str(total_minutes);
+		
+		time_msg.textContent = `${m}:${s}`;
+		// TODO: this breaks if you play for more than an hour...
+		// I think original minesweeper just shows seconds and caps them at 999?
+		
+		console.log('tick!')
+	}
+
+	update_status_text() : void {
+		const status_msg = this.querySelector('#status-msg') as HTMLHeadingElement;
+		if(this.gameOver) {
+			status_msg.textContent = this.wonGame ? 'You Win!' : 'Game Over!';
+		} else {
+			status_msg.textContent = `Mines Left: ${this.count_unflagged_mines()}`;
+		}
+	}
+
+	update_score() : void {
+		const score_msg = this.querySelector('#score-msg') as HTMLHeadingElement;
+		if(this.gameOver) {
+			score_msg.textContent = `Score: ${this.score}`;
+		} else {
+			score_msg.innerHTML = '&nbsp;';
+		}
+	}
+
+	update_restart_msg() : void {
+		let restart_msg = this.querySelector('#restart-msg') as HTMLHeadingElement;
+		if(!this.gameOver) {
+			restart_msg.style.visibility = 'hidden';
+		} else {
+			restart_msg.style.visibility = '';
+		}
+	}
+
 	game_over(win: bool) {
+		
+		this.gameOver = true;
+		this.wonGame = win;
+
+		this.clock_stop();
+
 		this.endTime = Number(new Date());
 		if(win){
 			const time = this.endTime - this.startTime;
-			this.score = Math.floor( ( 1/time ) * 1000000);
+			if (time == 0) {
+				this.score = Infinity;
+				// Note: In JS, Infinity is already the result of 1/0
+				// But now we're explicit about it!
+			} else {
+				this.score = Math.floor( ( 1/time ) * 1000000);
+			}
 		} else {
 			this.score = 0;
 		}
 		this.show_all();
+		this.update_status_text();
+		this.update_score();
+
+		const status_msg = this.querySelector('#status-msg') as HTMLHeadingElement;
+		const gameOverText = win ? 'You Win!' : 'You Exploded!';
+		status_msg.textContent = gameOverText; 
+		`Mines: ${this.count_mines()}`;
 
 		// notify high score component
-		const payload : GameOverEvent = { score: this.score, highScoreCallback: () => { this._highlight(); }}; 
-		// TODO: but what about unhighlighting when other button wins?
-		// Maybe HighScore should broadcast a highscore message containing the ID of the winning button
+		const payload : GameOverEvent = { 
+			score: this.score, 
+			highScoreCallback: () => { this._highlight(); }
+		}; 
 		msgBus.publish("gameover", payload);
+		
 	}
 
 	///
 
 	init() {
+
+		this.gameOver = false;
+		this.wonGame = false;
 		this.firstClick = true;
+		// this.wasReset = false;
+		this.startTime = -1;
+		this.endTime = -1;
+		this.score = 0;
+
 		this.init_mines();
 		this.init_visible();
 		this.init_counts();
@@ -450,6 +593,10 @@ class MineSweeper extends HTMLElement {
 		this.innerHTML = template.innerHTML;
 		// NOTE: could also use cloneNode(true); Not sure if it matters
 
+		// restart button
+		this.querySelector('#restart-msg')!.addEventListener('click', () => this.reset());
+
+		// reset state and build the game board
 		this.init();
 
 		// disable context menu on game board
@@ -458,54 +605,54 @@ class MineSweeper extends HTMLElement {
 			return false;
 		})
 
-		// keyboard navigation
-		// TODO: TS dislikes this. Is there a better way?
-		// @ts-ignore 
-		if (typeof window.minesweeper_kbd_handled === 'undefined') {
-			// @ts-ignore
-			window.minesweeper_kbd_handled = true;
+
+		this.addEventListener('keydown', (event) => {
+			console.log(event.target);
+			console.log(event.code)
+			const target = event.target as HTMLElement;
+			if (!target.className.includes('cell')) {
+				console.log(target);
+				return;
+			}
+			const cell = event.target as HTMLDivElement;
+			const x = Number(cell.dataset['x']);
+			const y = Number(cell.dataset['y']);		
+
+			if (event.code == 'Space') {
+
+				this.open_cell(x,y);
+				return;
+			}
+
+			if (event.code == 'KeyF') {
+				this.flag_cell(x,y);
+				return;
+			}
+
+			// movement
+			let dx = 0;
+			let dy = 0;
+			switch(event.code) {
+				case "ArrowUp":    dy = -1; break;
+				case "ArrowDown":  dy =  1; break;
+				case "ArrowLeft":  dx = -1; break;
+				case "ArrowRight": dx =  1; break;
+			}
+			// let targetCell = findCell(x+dx, y+dy);
+			let targetCell = this.cells[x+dx]![y+dy];
 			
-			document.addEventListener('keydown', (event) => {
-				console.log(event.target);
-				console.log(event.code)
-				const target = event.target as HTMLElement;
-				if (!target.className.includes('cell')) {
-					console.log(target);
-					return;
-				}
-				const cell = event.target as HTMLDivElement;
-				const x = Number(cell.dataset['x']);
-				const y = Number(cell.dataset['y']);		
+			if(targetCell) {
+				targetCell.focus();
+			}
+		})
+	
+	
 
-				if (event.code == 'Space') {
 
-					this.open_cell(x,y);
-					return;
-				}
+	}
 
-				if (event.code == 'KeyF') {
-					this.flag_cell(x,y);
-					return;
-				}
-
-				// movement
-				let dx = 0;
-				let dy = 0;
-				switch(event.code) {
-					case "ArrowUp":    dy = -1; break;
-					case "ArrowDown":  dy =  1; break;
-					case "ArrowLeft":  dx = -1; break;
-					case "ArrowRight": dx =  1; break;
-				}
-				// let targetCell = findCell(x+dx, y+dy);
-				let targetCell = this.cells[x+dx]![y+dy];
-				
-				if(targetCell) {
-					targetCell.focus();
-				}
-			})
-		}
-
+	disconnectedCallback() {
+		this.clock_stop(); // clears time interval if necessary
 
 	}
 
@@ -527,8 +674,9 @@ class MineSweeper extends HTMLElement {
 
 
 	_highlight() {
-		this.classList.add('highlight');
-		setTimeout(() => {this.classList.remove('highlight');}, 1000);
+		const board = this.querySelector('.board')!;
+		board.classList.add('highlight');
+		setTimeout(() => {board.classList.remove('highlight');}, 2000);
 	}
 
 	

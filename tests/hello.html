@@ -7,6 +7,10 @@
 high-score{
   background-color:#fff8;
   padding:1em;
+  position:fixed;
+  top:1em;
+  border-radius:1em;
+  /* z-index:-1; */
 }
 .board{
 	background-color: #aaa;
@@ -14,16 +18,22 @@ high-score{
 	text-align: center;
 	padding: 2em;
   margin:1em;
+  border-radius:1em;
+  border: 0.5em solid #0000; 
+  /* transparent border, identical to highlight, to maintain layout */
+}
+.grid {
+  margin: auto;
 }
 body{
 	font-family: sans-serif;
 	font-weight: bold;
 	background-color: #333;
-    display: flex;
-    align-items: center; /* vertical */
-    justify-content: center; /* horizontal */
-    height: 100vh;
-    margin: 0;
+  display: flex;
+  align-items: center; /* vertical */
+  justify-content: center; /* horizontal */
+  height: 100vh;
+  margin: 0;
 }
 * {
 	box-sizing: border-box;
@@ -52,7 +62,18 @@ td{
   background-color: magenta !important;
 }
 .highlight {
-  outline:1em solid green;
+  border: 0.5em solid #0f0;
+}
+.glow {
+  box-shadow: 1em 1em 1em cyan;
+}
+#restart-msg{
+  cursor:pointer;
+  border:1px solid black;
+  border-radius:1em;
+  padding:0.5em;
+  background-color:#ddd;
+  margin-bottom: 0;
 }
     </style>
   </head>
@@ -60,13 +81,19 @@ td{
 
 <template id="minesweeper-template">
   <div class="board">
-    <table>
+    <table class="grid">
     </table>
+    <br>
+    <h2 id="status-msg">Mines: 10</h2>
+    <h3 id="time-msg">&nbsp;</h3>
+    <h3 id="score-msg">&nbsp;</h3>
+    <h3 id="restart-msg">Restart</h3>
   </div>
 </template>
 
 <high-score></high-score>
-<mine-sweeper></mine-sweeper>
+<br>
+<mine-sweeper rows="5" cols="5"></mine-sweeper>
 <mine-sweeper rows="7" cols="7"></mine-sweeper>
 
 

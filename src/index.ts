@@ -87,7 +87,6 @@ class MineSweeper extends HTMLElement {
 			this.mines.push([]);
 			for(let y = 0; y < this.ROWS; y++) {
 				const isMine = Math.random() < 0.10; // on avg, 10% of board filled with mines 
-				// const isMine = Math.random() < 0.02; // TMP TODO FIXME
 
 				this.mines[x]!.push(isMine);
 			}
@@ -106,9 +105,7 @@ class MineSweeper extends HTMLElement {
 
 	init_table() {
 		this.cells = [];
-		// TODO: if I had a shadow dom, would this work? 
-		//       If so, how do we query outside shadow dom?
-		// const table = document.querySelector('table') as HTMLTableElement;
+		
 		const table = this.querySelector('table') as HTMLTableElement;
 		
 		for(let y = 0; y < this.ROWS; y++) {
@@ -131,9 +128,11 @@ class MineSweeper extends HTMLElement {
 				cell.dataset['y'] = str(y);
 				cell.setAttribute('tabindex', '0'); // enable keyboard navigation
 
-				// TODO replace cell with custom element
+				// TODO replace cell with custom element ?
 				
 				// NOTE: click events now handled on table (event delegation)
+				// EDIT: This doesn't necessarily constitute an improvement...
+				//       If we make Cell its own component, we'll move the event back inside
 
 				this.cells[x]![y] = cell;
 				td.append(cell);
@@ -144,18 +143,10 @@ class MineSweeper extends HTMLElement {
 		table.addEventListener("mousedown", (e) => this.click_table(e));
 	}
 
-	// init_board() {
-	// 	// NOTE: this appears to be unnecessary 
-	// 	// TODO remove?
-	// 	/*	width: 21em; */ /* 9 cols * 2em per cell = 18em, plus 2em padding */
-		
-	// 	// const w = COLS * 2 + 2;
-	// 	// document.querySelector('#board').style.width = w + 'em';
-	// }
-
-	///
 
 	click_table(event: MouseEvent) {
+
+		if(this.gameOver) return;
 
 		// TODO move this into a Cell component ?
 
@@ -165,7 +156,7 @@ class MineSweeper extends HTMLElement {
 		if (target.tagName != 'DIV')  return;
 
 		// TODO use .cell divs instead
-		// if (target.className != 'cell') return;
+		if (target.className != 'cell') return;
 
 		const cell = target as HTMLDivElement; // NOTE: click_cell() handler is only attached to TD elements 
 		// const [x,y] = id_to_coords(cell.id);
@@ -476,7 +467,6 @@ class MineSweeper extends HTMLElement {
 		// TODO: this breaks if you play for more than an hour...
 		// I think original minesweeper just shows seconds and caps them at 999?
 		
-		console.log('tick!')
 	}
 
 	update_status_text() : void {
@@ -569,6 +559,7 @@ class MineSweeper extends HTMLElement {
 	}
 
 	reset() {
+		this.querySelector('#time-msg')!.innerHTML = '&nbsp';
 		this.wasReset = true;
 		this.init();
 	}

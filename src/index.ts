@@ -50,18 +50,15 @@ class MineSweeper extends HTMLElement {
 	ROWS: int = 9;
 	COLS: int = 9;
 
-	// const ROWS = 20;
-	// const COLS = 20;
+
+	mines: bool[][] = []; 
+	visible: bool[][]  = []; 
+	counts: int[][] = [] ; 
+
+	flags: bool[][] = [] ; 
 
 
-	mines: bool[][] = [];    // 2D grid, bool
-	visible: bool[][]  = []; // 2D grid, bool
-	counts: int[][] = [] ;  // 2D grid, int (well, 'number' in JS...)
-
-	flags: bool[][] = [] ;  // 2D grid, bool
-
-
-	cells: HTMLDivElement[][] = [];  // 2D grid, references to <td> (game board cells)
+	cells: HTMLDivElement[][] = []; 
 
 	clock_interval: number | null = null;
 	clock_start_time: Date | null = null;
@@ -112,18 +109,14 @@ class MineSweeper extends HTMLElement {
 			this.cells.push([]);
 		}
 
-		// for(let x = 0; x < this.COLS; x++) {
 		for(let y = 0; y < this.ROWS; y++) {
 			this.cells.push([]);
 			const tr = document.createElement("tr");
-			// for(let y = 0; y < this.ROWS; y++) {
 				for(let x = 0; x < this.COLS; x++) {
 				const td = document.createElement("td");
-				// td.id = `${x}_${y}`;
 				
 				const cell = document.createElement("div");
 				cell.className = 'cell';
-				// cell.id = `${x}_${y}`;
 				cell.dataset['x'] = str(x);
 				cell.dataset['y'] = str(y);
 				cell.setAttribute('tabindex', '0'); // enable keyboard navigation
@@ -198,14 +191,10 @@ class MineSweeper extends HTMLElement {
 		this.firstClick = false;
 
 		if (isMine) {
-			// cells[x][y].style.backgroundColor = "red";
-			// alert('dead');
 			this.game_over(false);
 		} else {
-			// cells[x][y].style.backgroundColor = "#ddd";
 			this.flood_fill(x,y);
 			if(this.check_win()) {
-				// alert('you win')
 				this.game_over(true);
 			}
 		}
@@ -219,7 +208,6 @@ class MineSweeper extends HTMLElement {
 		
 		console.log('right_click_cell', x, y)
 		console.log(this.flags[x]![y])
-		// if(visible[x][y]) return;
 		this.flags[x]![y] = !this.flags[x]![y]!;
 		console.log(this.flags[x]![y])
 		this.render();
@@ -240,17 +228,6 @@ class MineSweeper extends HTMLElement {
 		}
 
 	}
-
-	// id_to_coords(id: string) : [int, int] {
-	//   // TODO: after refactor does it make sense to use IDs here at all?
-	//   // I think we removed them in another version
-	// 	// EDIT: In React version we use an `index` prop on <Cell>, 
-	// 	// and pass `index` to the click handler. (index is from the 1D version)
-	//   // @ts-ignore 
-	// 	return id.split('_').map(x => Number(x));
-	// }
-
-	///
 
 	init_counts() {
 		this.counts = [];
@@ -356,7 +333,6 @@ class MineSweeper extends HTMLElement {
 			for(let y = 0; y < this.ROWS; y++) {
 				const cell = this.cells[x]![y]!;
 				if (!this.visible[x]![y]) {
-					// cell.style.opacity = 0;
 					cell.style.backgroundColor = '#aaa'
 					if(this.flags[x]![y]){
 						cell.innerHTML = 'F';
@@ -541,7 +517,7 @@ class MineSweeper extends HTMLElement {
 		this.gameOver = false;
 		this.wonGame = false;
 		this.firstClick = true;
-		// this.wasReset = false;
+		// this.wasReset = false; // we use this to not rebuild the board on subsequent inits
 		this.startTime = -1;
 		this.endTime = -1;
 		this.score = 0;
@@ -553,8 +529,6 @@ class MineSweeper extends HTMLElement {
 		if(!this.wasReset){
 			this.init_table();
 		}
-		// this.init_board();
-		// dbg_render();
 		this.render();
 	}
 
@@ -629,7 +603,7 @@ class MineSweeper extends HTMLElement {
 				case "ArrowLeft":  dx = -1; break;
 				case "ArrowRight": dx =  1; break;
 			}
-			// let targetCell = findCell(x+dx, y+dy);
+			
 			let targetCell = this.cells[x+dx]![y+dy];
 			
 			if(targetCell) {
@@ -646,22 +620,6 @@ class MineSweeper extends HTMLElement {
 		this.clock_stop(); // clears time interval if necessary
 
 	}
-
-	// this.init();
-
-	// TODO fixme
-	// document.querySelector('#board')!.addEventListener('contextmenu', function(e){
-	// 	e.preventDefault();
-	// 	return false;
-	// })
-
-	// document.addEventListener('keydown', function(e) {
-	// 	// console.log(e.key)
-	// 	// console.log(e.code)
-	// 	if (e.code == 'KeyR') {
-	// 		reset();
-	// 	}
-	// })
 
 
 	_highlight() {

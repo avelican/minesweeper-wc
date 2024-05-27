@@ -419,6 +419,18 @@ class MineSweeper extends HTMLElement {
 		return this.count_mines() - this.count_flags();
 	}
 
+	count_mines_correctly_flagged() : int {
+		let count = 0;
+		for(let x = 0; x < this.COLS; x++) {
+			for(let y = 0; y < this.ROWS; y++) {
+				if(this.flags[x]![y]! == this.mines[x]![y]!) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
 	///
 
 	update_text_content() : void {
@@ -480,18 +492,22 @@ class MineSweeper extends HTMLElement {
 		this.clock_stop();
 
 		this.endTime = Number(new Date());
-		if(win){
-			const time = this.endTime - this.startTime;
-			if (time == 0) {
-				this.score = Infinity;
-				// Note: In JS, Infinity is already the result of 1/0
-				// But now we're explicit about it!
-			} else {
-				this.score = Math.floor( ( 1/time ) * 1000000);
-			}
+
+		const time = this.endTime - this.startTime;
+		if (time == 0) {
+			this.score = 999999;
 		} else {
-			this.score = 0;
+			this.score = ( 1/time ) * 999999;
 		}
+
+		if(win) {
+			this.score *= 10;
+		} else {
+			this.score *= this.count_mines_correctly_flagged() / this.count_mines();
+		}
+
+		this.score = Math.floor(this.score);
+
 		this.show_all();
 		this.update_status_text();
 		this.update_score();

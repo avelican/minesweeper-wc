@@ -21,6 +21,9 @@ I liked being able to edit it in the tests folder before. Now you need to run a 
 
 ## To do:
 
+- [ ] Sometimes no mines spawn (since the spawning is purely random)
+- [ ] Sometimes one click wins the game, even if many mines spawn, because flood-fill algorithm uncovers the whole board in one click. (How to detect and prevent this?)
+- [ ] Look into how to generate a No Guess board. 
 - [ ] `MineSweeper.render()` is atrocious. I think making a Cell component would clear things up a lot.
 - [ ] `MineSweeper`'s `<template>` is currently in `test.html`, which doesn't make sense. I could move it into MineSweeper, but having it in JS seems to defeat the purpose of having a template?
 - [ ] Component styles are in`test.html`, which again doesn't seem right. These could be moved to a css file, but the whole point of WebComponents is that things are self-contained. I need to look into styling WebComponents. Examples put a `<style>` node directly in the custom element (with Shadow DOM), is that really the right solution?

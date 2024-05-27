@@ -2,6 +2,10 @@
 
 Have you always wanted to sweep mines, but with Web Components?
 
+## Live Demo
+
+https://minesweeper-wc.onrender.com/
+
 ## Build
 
 ```

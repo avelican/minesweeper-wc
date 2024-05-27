@@ -9,7 +9,7 @@ x   instead of adding a click handler on each cell, just put one on the table (e
 x   mine-sweeper custom element
 x   mine-sweeper takes rows/cols custom attributes
 
-  Phase III: Enhancements
-    Click to Restart message
-    High score
+x  Phase III: Enhancements
+x    Click to Restart message
+x    High score
 x    Keyboard navigation
